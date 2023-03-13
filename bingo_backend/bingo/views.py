@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 
 # Create your views here.
@@ -15,7 +16,7 @@ from .serializers import *
 from .serializers import BingoResponseSerializer
 
 
-class BingoEdit(APIView):
+class BingoEdit(APIView, LoginRequiredMixin):
     """
     implements post, delete and get methods for work with one Bingo set
     """
@@ -88,7 +89,7 @@ class BingoEdit(APIView):
             return Response(data={'Status': f'Error occurred: {e}'})
 
 
-class BingoCommon(APIView):
+class BingoCommon(LoginRequiredMixin, APIView):
     """
     implement creation and all ids of bingo return
     """
