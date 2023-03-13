@@ -13,5 +13,7 @@ class User(AbstractUser):
     nickname = models.CharField(max_length=40, unique=True, null=False)
     role = models.ManyToManyField(to=Role, related_name='role')
 
+    def is_player(self):
+        return self.role == Role.objects.get(name='player')
 
 

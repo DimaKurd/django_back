@@ -12,11 +12,12 @@ from rest_framework.response import Response
 
 from .models import User, Role
 from .serializers import *
+from .serializers import UserResponseSerializer
 
 
 @swagger_auto_schema(request_body=UserSerializer, method='post',
-                     responses={status.HTTP_400_BAD_REQUEST: ResponseSerializer,
-                                status.HTTP_200_OK: ResponseSerializer})
+                     responses={status.HTTP_400_BAD_REQUEST: UserResponseSerializer,
+                                status.HTTP_200_OK: UserResponseSerializer})
 @api_view(http_method_names=["POST"])
 def register(request: Request):
     """
@@ -50,8 +51,8 @@ def register(request: Request):
 
 
 @swagger_auto_schema(request_body=UserSerializer, method='post',
-                     responses={status.HTTP_403_FORBIDDEN: ResponseSerializer,
-                                status.HTTP_200_OK: ResponseSerializer}
+                     responses={status.HTTP_403_FORBIDDEN: UserResponseSerializer,
+                                status.HTTP_200_OK: UserResponseSerializer}
                      )
 @api_view(http_method_names=["POST"])
 def login_to_bingo(request: Request):
@@ -77,8 +78,8 @@ def login_to_bingo(request: Request):
 
 
 @swagger_auto_schema(request_body=GuestSerializer, method='post',
-                     responses={status.HTTP_400_BAD_REQUEST: ResponseSerializer,
-                                status.HTTP_200_OK: ResponseSerializer}
+                     responses={status.HTTP_400_BAD_REQUEST: UserResponseSerializer,
+                                status.HTTP_200_OK: UserResponseSerializer}
                      )
 @api_view(["POST"])
 def easy_login_to_bingo(request: Request):
@@ -96,7 +97,14 @@ def easy_login_to_bingo(request: Request):
     try:
         users = User.objects.filter(nickname=nickname)
         if users:
-            return Response(json.dumps('User already exists with such nickname'), status=status.HTTP_400_BAD_REQUEST)
+            user = authenticate(username=nickname, password='1234')
+            if user is not None:
+                login(request, user)
+                return Response(json.dumps({'status': 'Successful'}), status=status.HTTP_200_OK)
+            else:
+                return Response(json.dumps('User already exists with such nickname'),
+                                status=status.HTTP_400_BAD_REQUEST)
+
         else:
             temp_user = User.objects.create_user(nickname=nickname, password='1234',
                                                  username=nickname)
@@ -105,15 +113,10 @@ def easy_login_to_bingo(request: Request):
 
     temp_user = User.objects.get(nickname=temp_user.nickname)
     temp_user.role.add(Role.objects.get(name='ghost'))
-    user = authenticate(username=nickname, password='1234')
-    if user is not None:
-        login(request, user)
-        return Response(json.dumps({'status': 'Successful'}), status=status.HTTP_200_OK)
-    else:
-        return Response(json.dumps({'status': 'Fault'}), status=status.HTTP_403_FORBIDDEN)
+    return Response(json.dumps({'status': 'Successful'}), status=status.HTTP_200_OK)
 
 
-@swagger_auto_schema(responses={status.HTTP_200_OK: ResponseSerializer}, method='get')
+@swagger_auto_schema(responses={status.HTTP_200_OK: UserResponseSerializer}, method='get')
 @api_view(["GET"])
 def logout_bingo(request):
     """

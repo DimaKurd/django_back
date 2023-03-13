@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'bingo.apps.BingoConfig',
     'drf_yasg',
     'rest_framework',
     'user.apps.UserConfig',

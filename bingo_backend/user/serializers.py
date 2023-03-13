@@ -8,5 +8,5 @@ class UserSerializer(serializers.Serializer):
 class GuestSerializer(serializers.Serializer):
     nickname = serializers.CharField(max_length=40, required=True)
 
-class ResponseSerializer(serializers.Serializer):
+class UserResponseSerializer(serializers.Serializer):
     status = serializers.CharField(max_length=200)
