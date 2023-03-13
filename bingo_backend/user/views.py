@@ -2,72 +2,114 @@ import json
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpRequest
-from django.shortcuts import redirect
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_http_methods
-
+from drf_yasg.utils import swagger_auto_schema
 # Create your views here.
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.request import Request
+from rest_framework.response import Response
+
 from .models import User, Role
+from .serializers import *
 
 
-@require_http_methods(["POST"])
-def register(request: HttpRequest):
+@swagger_auto_schema(request_body=UserSerializer, method='post')
+@api_view(http_method_names=["POST"])
+def register(request: Request):
+    """
+    Entrypoint for registration of new user as player
+    :param request:
+    :return:
+    """
+    serializer = UserSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     try:
-        users = User.objects.filter(nickname=request.POST['nickname'])
+        users = User.objects.filter(nickname=request.data['nickname'])
         if users:
-            return HttpResponse(status=400, content=json.dumps('User already exists with such nickname'))
+            return Response(json.dumps('User already exists with such nickname'), status=400)
         else:
-            user = User.objects.create_user(nickname=request.POST['nickname'], password=request.POST['password'],
-                                            username=request.POST['nickname'])
+            user = User.objects.create_user(nickname=request.data['nickname'], password=request.data['password'],
+                                            username=request.data['nickname'])
     except Exception as e:
-        return HttpResponse(status=400, content=json.dumps(f'{e}'))
+        return Response(json.dumps(f'{e}'), status=400, )
 
     user = User.objects.get(nickname=user.nickname)
     user.role.set([Role.objects.get(name='player')])
     user.save()
 
-    return HttpResponse(content=json.dumps({'status': 'Success'}), status=200)
+    return Response(json.dumps({'status': 'Success'}), status=200)
 
 
-@require_http_methods(["POST"])
-def login_to_bingo(request: HttpRequest):
-    nickname = request.POST['nickname']
-    password = request.POST['password']
+@swagger_auto_schema(request_body=UserSerializer, method='post')
+@api_view(http_method_names=["POST"])
+def login_to_bingo(request: Request):
+    """
+    entrypoint for login to bingo as player
+    :param request:
+    :return:
+    """
+    nickname = request.data['nickname']
+    password = request.data['password']
     user = authenticate(username=nickname, password=password)
     if user is not None:
         login(request, user)
-        return HttpResponse(status=200, content=json.dumps({'status': 'Successful'}))
+        return Response(json.dumps({'status': 'Successful'}), status=200)
     else:
-        return HttpResponse(status=403, content=json.dumps({'status': 'Fault'}))
+        return Response(json.dumps({'status': 'Fault'}), status=403)
 
 
-@require_http_methods(["POST"])
-def easy_login_to_bingo(request: HttpRequest):
-    nickname = request.POST['nickname']
+@swagger_auto_schema(request_body=GuestSerializer, method='post')
+@api_view(["POST"])
+def easy_login_to_bingo(request: Request):
+    """
+    entrypoint for easy registration as guest (ghost)
+    :param request:
+    :return:
+    """
+    serializer = GuestSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    nickname = request.data['nickname']
     try:
-        temp_user = User.objects.create_user(nickname=request.POST['nickname'], password='1234',
-                                             username=request.POST['nickname'])
+        temp_user = User.objects.create_user(nickname=request.data['nickname'], password='1234',
+                                             username=request.data['nickname'])
     except Exception as e:
-        return HttpResponse(status=400, content=json.dumps(f'{e}'))
+        return Response(json.dumps(f'{e}'), status=status.HTTP_400_BAD_REQUEST)
 
     temp_user = User.objects.get(nickname=temp_user.nickname)
     temp_user.role.add(Role.objects.get(name='ghost'))
     user = authenticate(username=nickname, password='1234')
     if user is not None:
         login(request, user)
-        return HttpResponse(status=200, content=json.dumps({'status': 'Successful'}))
+        return Response(json.dumps({'status': 'Successful'}), status=status.HTTP_200_OK)
     else:
-        return HttpResponse(status=403, content=json.dumps({'status': 'Fault'}))
+        return Response(json.dumps({'status': 'Fault'}), status=status.HTTP_403_FORBIDDEN)
 
 
-@require_http_methods(["GET"])
+@api_view(["GET"])
 def logout_bingo(request):
+    """
+    logout
+    :param request:
+    :return:
+    """
     logout(request)
-    return HttpResponse(status=200, content=json.dumps({'status': 'Logout successful'}))
+    return Response(json.dumps({'status': 'Logout successful'}), status=status.HTTP_200_OK)
 
 
 @ensure_csrf_cookie
-@login_required
+@api_view(["GET"])
 def index(request):
-    return HttpResponse(f"Hello {request.user.username}")
+    """
+    entrypoint for assuring that login is successful and csrf is set
+    :param request:
+    :return:
+    """
+    if request.user.is_authenticated:
+        return Response(f"Hello {request.user.username}")
+    else:
+        return Response('Hello ghost')
