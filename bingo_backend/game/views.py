@@ -15,7 +15,7 @@ from bingo.models import Bingo
 from bingo.permissions import IsPlayer
 from game.models import GameSession
 from game.permissions import IsGameSessionOwner
-from game.serializers import GameErrorResponseSerializer, SingleGameDataResponse, GameCreationDataSerializer, \
+from game.serializers import GameEndpointResponseSerializer, SingleGameDataResponse, GameCreationDataSerializer, \
     ManyGameDataResponse
 
 
@@ -26,7 +26,7 @@ class GameManage(LoginRequiredMixin, APIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [IsPlayer, IsGameSessionOwner]
 
-    @swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST: GameErrorResponseSerializer,
+    @swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST: GameEndpointResponseSerializer,
                                     status.HTTP_200_OK: SingleGameDataResponse})
     def get(self, request, game_id):
         """
@@ -43,8 +43,8 @@ class GameManage(LoginRequiredMixin, APIView):
             return Response(data={'Status': f'Something went wrong: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(request_body=GameCreationDataSerializer,
-                         responses={status.HTTP_400_BAD_REQUEST: GameErrorResponseSerializer,
-                                    status.HTTP_403_FORBIDDEN: GameErrorResponseSerializer,
+                         responses={status.HTTP_400_BAD_REQUEST: GameEndpointResponseSerializer,
+                                    status.HTTP_403_FORBIDDEN: GameEndpointResponseSerializer,
                                     status.HTTP_200_OK: SingleGameDataResponse})
     def put(self, request, game_id):
         """
@@ -73,8 +73,8 @@ class GameManage(LoginRequiredMixin, APIView):
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'Status': f'Something wrong: {e}'})
 
-    @swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST: GameErrorResponseSerializer,
-                                    status.HTTP_204_NO_CONTENT: GameErrorResponseSerializer}
+    @swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST: GameEndpointResponseSerializer,
+                                    status.HTTP_204_NO_CONTENT: GameEndpointResponseSerializer}
                          )
     def delete(self, request: Request, game_id: int):
         """
@@ -112,9 +112,9 @@ class GameCommon(LoginRequiredMixin, APIView):
         return Response(data=data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(request_body=GameCreationDataSerializer,
-                         responses={status.HTTP_403_FORBIDDEN: GameErrorResponseSerializer,
-                                    status.HTTP_200_OK: GameErrorResponseSerializer,
-                                    status.HTTP_400_BAD_REQUEST: GameErrorResponseSerializer}
+                         responses={status.HTTP_403_FORBIDDEN: GameEndpointResponseSerializer,
+                                    status.HTTP_200_OK: GameEndpointResponseSerializer,
+                                    status.HTTP_400_BAD_REQUEST: GameEndpointResponseSerializer}
                          )
     def post(self, request):
         """
@@ -144,8 +144,8 @@ class GameCommon(LoginRequiredMixin, APIView):
 @api_view(http_method_names=['POST'])
 @permission_classes([IsGameSessionOwner, IsPlayer])
 @login_required
-@swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST:GameErrorResponseSerializer,
-                                               status.HTTP_200_OK: GameErrorResponseSerializer})
+@swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST:GameEndpointResponseSerializer,
+                                               status.HTTP_200_OK: GameEndpointResponseSerializer})
 def start_game(request, game_id):
     """
     Method for starting game
@@ -166,8 +166,8 @@ def start_game(request, game_id):
 @api_view(http_method_names=['POST'])
 @permission_classes([IsGameSessionOwner, IsPlayer])
 @login_required
-@swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST:GameErrorResponseSerializer,
-                                               status.HTTP_200_OK: GameErrorResponseSerializer})
+@swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST:GameEndpointResponseSerializer,
+                                               status.HTTP_200_OK: GameEndpointResponseSerializer})
 def stop_game(request, game_id):
     """
     Method for stopping game
