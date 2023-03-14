@@ -77,9 +77,6 @@ class BingoEdit(APIView, LoginRequiredMixin):
         :param bingo_id:
         :return:
         """
-        serializer = BingoEditSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             bingo = Bingo.objects.get(bingo_id=bingo_id)
