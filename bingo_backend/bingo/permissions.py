@@ -2,7 +2,6 @@ from rest_framework import permissions
 from rest_framework.request import Request
 
 from bingo.models import Bingo
-from user.models import Role
 
 
 class IsPlayer(permissions.BasePermission):

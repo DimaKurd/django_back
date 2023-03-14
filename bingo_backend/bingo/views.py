@@ -126,6 +126,6 @@ class BingoCommon(LoginRequiredMixin, APIView):
         :param request:
         :return:
         """
-        data = {bingo.bingo_id: bingo.name for bingo in Bingo.objects.filter(author_id=request.user.user_id)}
+        data = {bingo.bingo_id: bingo.name for bingo in Bingo.objects.filter(author_id=request.user)}
         return Response(data=data, status=status.HTTP_200_OK)
 
