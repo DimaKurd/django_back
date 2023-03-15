@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'user_session.apps.UserSessionConfig',
     'game.apps.GameConfig',
     'bingo.apps.BingoConfig',
     'drf_yasg',
@@ -126,3 +127,5 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 AUTH_USER_MODEL = 'user.User'
+HOST_URL = 'http://127.0.0.1:8000'
+LOGIN_URL = HOST_URL + '/user/'

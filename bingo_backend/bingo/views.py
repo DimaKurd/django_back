@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Bingo
-from .permissions import IsPlayer, IsBingoOwner
+from .permissions import IsBingoOwner
 from .serializers import *
 from .serializers import BingoResponseSerializer
 
@@ -21,7 +21,7 @@ class BingoEdit(APIView, LoginRequiredMixin):
     implements post, delete and get methods for work with one Bingo set
     """
     authentication_classes = [authentication.SessionAuthentication]
-    permission_classes = [IsPlayer, IsBingoOwner]
+    permission_classes = [IsBingoOwner]
 
     @swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST: BingoResponseSerializer,
                                     status.HTTP_200_OK: BingoResponseSerializer}
@@ -91,7 +91,6 @@ class BingoCommon(LoginRequiredMixin, APIView):
     implement creation and all ids of bingo return
     """
     authentication_classes = [authentication.SessionAuthentication]
-    permission_classes = [IsPlayer]
 
     @swagger_auto_schema(request_body=BingoCreateSerializer,
                          responses={status.HTTP_400_BAD_REQUEST: BingoResponseSerializer,

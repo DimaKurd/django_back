@@ -4,17 +4,17 @@ from rest_framework.request import Request
 from bingo.models import Bingo
 
 
-class IsPlayer(permissions.BasePermission):
-    """
-    Custom permission to only allow players to create new bingos
-    """
-
-    def has_permission(self, request: Request, view):
-        #
-        for role in request.user.role.all():
-            if role.name == 'player':
-                return True
-        return False
+# class IsPlayer(permissions.BasePermission):
+#     """
+#     Custom permission to only allow players to create new bingos
+#     """
+#
+#     def has_permission(self, request: Request, view):
+#         #
+#         for role in request.user.role.all():
+#             if role.name == 'player':
+#                 return True
+#         return False
 
 
 class IsBingoOwner(permissions.BasePermission):

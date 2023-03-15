@@ -37,6 +37,7 @@ urlpatterns = [
     path('user/', include('user.urls')),
     path('bingo/', include('bingo.urls')),
     path('game/', include('game.urls')),
+    path('session/', include('user_session.urls')),
     path('playground/', schema_view.with_ui('swagger', cache_timeout=0)),
     path('docs/', schema_view.with_ui('redoc', cache_timeout=0)),
 ]
