@@ -1,15 +1,19 @@
 import random
+import string
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 # Create your views here.
+from django.shortcuts import redirect
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, authentication
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from user_session.views import SessionHandler
 from bingo.models import Bingo
 from game.models import GameSession
 from game.permissions import IsGameSessionOwner
@@ -106,13 +110,13 @@ class GameCommon(LoginRequiredMixin, APIView):
         """
         game_sessions = GameSession.objects.filter(bingo_id__author_id=request.user)
         data = [{'game_id': game_session.game_id, 'bingo_id': game_session.bingo_id.bingo_id,
-                 'launched': game_session.launched, 'max_players': game_session.max_players} for game_session in
+                 'launched': game_session.launched, 'join_code': game_session.join_code} for game_session in
                 game_sessions]
         return Response(data=data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(request_body=GameCreationDataSerializer,
                          responses={status.HTTP_403_FORBIDDEN: GameEndpointResponseSerializer,
-                                    status.HTTP_200_OK: GameEndpointResponseSerializer,
+                                    status.HTTP_201_CREATED: GameCreationDataSerializer,
                                     status.HTTP_400_BAD_REQUEST: GameEndpointResponseSerializer}
                          )
     def post(self, request):
@@ -128,12 +132,13 @@ class GameCommon(LoginRequiredMixin, APIView):
         try:
             bingo = Bingo.objects.get(bingo_id=request.data['bingo_id'])
             if request.user == bingo.author_id:
-                game_session = GameSession.objects.create(bingo_id=bingo, launched=False,
-                                                          max_players=request.data.get('max_players'))
+                game_session = GameSession.objects.create(bingo_id=bingo, launched=True)
+                game_session.join_code = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(8))
+                game_session.save()
                 # TODO Remove this Costyl
                 game_session = GameSession.objects.filter(bingo_id=game_session.bingo_id).order_by('-game_id')[0]
-                return Response(status=status.HTTP_201_CREATED, data={'Status': f'New gameSession created with '
-                                                                                f'id {game_session.game_id}'})
+                return Response(status=status.HTTP_201_CREATED, data={'game_id': game_session.game_id,
+                                                                      'join_code': game_session.join_code})
             else:
                 return Response(status=status.HTTP_403_FORBIDDEN, data={'Status': f'Not yours bingo. Ha-ha'})
         except Exception as e:
@@ -183,6 +188,8 @@ def stop_game(request, game_id):
 
 
 class Connection(APIView):
+    authentication_classes = [SessionAuthentication]
+
     @swagger_auto_schema(request_body=GameConnectDataSerializer,
                          responses={status.HTTP_200_OK: UserSessionDataSerializer,
                                     status.HTTP_406_NOT_ACCEPTABLE: GameEndpointResponseSerializer,
@@ -200,18 +207,20 @@ class Connection(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            game = GameSession.objects.get(game_id=request.data['game_id'])
+            game = GameSession.objects.get(join_code=request.data['join_code'])
+            if not game.launched:
+                return Response(status=status.HTTP_406_NOT_ACCEPTABLE, data={'Status': 'Game not started'})
+
             if request.user.is_authenticated:
-                if game.launched:
-                    user_session, _ = UserSession.objects.get_or_create(player=request.user, game=game)
-                    return Response(status=status.HTTP_200_OK, data={'game_id': user_session.game.game_id,
-                                                                     'player_id': user_session.player.user_id,
-                                                                     'progress': user_session.progress,
-                                                                     'random_seed': user_session.random_seed})
-                else:
-                    return Response(status=status.HTTP_406_NOT_ACCEPTABLE, data={'Status': 'Game not started'})
+                user_s, _ = UserSession.objects.get_or_create(player=request.user, game=game)
+                user_s = UserSession.objects.get(player=request.user, game=game)
+                return SessionHandler().get(request=request, session_id=user_s.session_id)
             else:
-                pass
+                request.session['game_id'] = game.game_id
+                request.session['player_id'] = -1
+                request.session['progress'] = ''
+                request.session['random_seed'] = random.randint(1, 10000)
+                return SessionHandler().get(request=request, session_id=random.randint(10000, 50000))
 
         except Exception as e:
             return Response(data={'Status': f'Something went wrong {e}'}, status=status.HTTP_400_BAD_REQUEST)

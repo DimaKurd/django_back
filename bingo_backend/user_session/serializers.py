@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 
 class UserSessionDataSerializer(serializers.Serializer):
+    session_id = serializers.IntegerField(required=True)
     game_id = serializers.IntegerField(required=True)
     player_id = serializers.IntegerField(required=True)
     progress = serializers.JSONField()
