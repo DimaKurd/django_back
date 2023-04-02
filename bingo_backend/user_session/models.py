@@ -12,5 +12,5 @@ class UserSession(models.Model):
     game = models.ForeignKey(to=GameSession, to_field='game_id', on_delete=models.CASCADE)
     player = models.ForeignKey(to=User, to_field='user_id', on_delete=models.CASCADE)
     progress = models.TextField(null=True)
-    random_seed = models.IntegerField(null=False, default=random.randint(0, 10000))
+    random_seed = models.IntegerField(null=False, default=42)
 

@@ -132,11 +132,14 @@ class GameCommon(LoginRequiredMixin, APIView):
         try:
             bingo = Bingo.objects.get(bingo_id=request.data['bingo_id'])
             if request.user == bingo.author_id:
-                game_session = GameSession.objects.create(bingo_id=bingo, launched=True)
-                game_session.join_code = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(8))
-                game_session.save()
+                game_session = GameSession.objects.create(bingo_id=bingo, launched=True,
+                                                          join_code=''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(8)))
+                request.data['join_code'] = game_session.join_code
+                Connection().post(request=request)
+
                 # TODO Remove this Costyl
                 game_session = GameSession.objects.filter(bingo_id=game_session.bingo_id).order_by('-game_id')[0]
+
                 return Response(status=status.HTTP_201_CREATED, data={'game_id': game_session.game_id,
                                                                       'join_code': game_session.join_code})
             else:
@@ -214,6 +217,8 @@ class Connection(APIView):
             if request.user.is_authenticated:
                 user_s, _ = UserSession.objects.get_or_create(player=request.user, game=game)
                 user_s = UserSession.objects.get(player=request.user, game=game)
+                user_s.random_seed = random.randint(0, 10000)
+                user_s.save()
                 return SessionHandler().get(request=request, session_id=user_s.session_id)
             else:
                 request.session['game_id'] = game.game_id

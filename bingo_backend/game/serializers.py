@@ -18,7 +18,6 @@ class ManyGameDataResponse(serializers.ListSerializer):
 
 class GameCreationDataSerializer(serializers.Serializer):
     bingo_id = serializers.IntegerField(required=True)
-    join_code = serializers.CharField(max_length=8, allow_null=True, required=False)
 
 
 class GameConnectDataSerializer(serializers.Serializer):
