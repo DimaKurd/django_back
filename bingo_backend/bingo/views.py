@@ -42,7 +42,7 @@ class BingoEdit(APIView, LoginRequiredMixin):
                          responses={status.HTTP_400_BAD_REQUEST: BingoResponseSerializer,
                                     status.HTTP_200_OK: BingoResponseSerializer}
                          )
-    def post(self, request: Request, bingo_id: int):
+    def put(self, request: Request, bingo_id: int):
         """
         method for editing words and name of bingo
         :param request:
