@@ -1,19 +1,15 @@
 import random
 import string
 
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 # Create your views here.
-from django.shortcuts import redirect
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, authentication
-from rest_framework.authentication import SessionAuthentication
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from user_session.views import SessionHandler
 from bingo.models import Bingo
 from game.models import GameSession
 from game.permissions import IsGameSessionOwner
@@ -21,14 +17,14 @@ from game.serializers import (GameEndpointResponseSerializer, SingleGameDataResp
                               ManyGameDataResponse, GameConnectDataSerializer)
 from user_session.models import UserSession
 from user_session.serializers import UserSessionDataSerializer
+from user_session.views import SessionHandler
 
 
-class GameManage(LoginRequiredMixin, APIView):
+class GameManage(APIView):
     """
     implements connection to game, getting game info update game settings and removing game from DB
     """
-    authentication_classes = [authentication.SessionAuthentication]
-    permission_classes = [IsGameSessionOwner]
+    permission_classes = [IsGameSessionOwner, IsAuthenticated]
 
     @swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST: GameEndpointResponseSerializer,
                                     status.HTTP_200_OK: SingleGameDataResponse})
@@ -95,12 +91,10 @@ class GameManage(LoginRequiredMixin, APIView):
             return Response(data={'Status': f'Error occurred: {e}'})
 
 
-class GameCommon(LoginRequiredMixin, APIView):
+class GameCommon(APIView):
     """
     Implements creation and provide info about user games
     """
-    authentication_classes = [authentication.SessionAuthentication]
-
     @swagger_auto_schema(responses={status.HTTP_200_OK: ManyGameDataResponse})
     def get(self, request):
         """
@@ -108,10 +102,14 @@ class GameCommon(LoginRequiredMixin, APIView):
         :param request:
         :return:
         """
-        game_sessions = GameSession.objects.filter(bingo_id__author_id=request.user)
-        data = [{'game_id': game_session.game_id, 'bingo_id': game_session.bingo_id.bingo_id,
-                 'launched': game_session.launched, 'join_code': game_session.join_code} for game_session in
-                game_sessions]
+        if request.user.is_authenticated:
+            game_sessions = GameSession.objects.filter(bingo_id__author_id=request.user)
+            data = [{'game_id': game_session.game_id, 'bingo_id': game_session.bingo_id.bingo_id,
+                     'launched': game_session.launched, 'join_code': game_session.join_code} for game_session in
+                    game_sessions]
+        else:
+            data = []
+
         return Response(data=data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(request_body=GameCreationDataSerializer,
@@ -149,8 +147,7 @@ class GameCommon(LoginRequiredMixin, APIView):
 
 
 @api_view(http_method_names=['POST'])
-@permission_classes([IsGameSessionOwner])
-@login_required
+@permission_classes([IsGameSessionOwner, IsAuthenticated])
 @swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST: GameEndpointResponseSerializer,
                                 status.HTTP_200_OK: GameEndpointResponseSerializer})
 def start_game(request, game_id):
@@ -170,8 +167,7 @@ def start_game(request, game_id):
 
 
 @api_view(http_method_names=['POST'])
-@permission_classes([IsGameSessionOwner])
-@login_required
+@permission_classes([IsGameSessionOwner, IsAuthenticated])
 @swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST: GameEndpointResponseSerializer,
                                 status.HTTP_200_OK: GameEndpointResponseSerializer})
 def stop_game(request, game_id):
@@ -191,8 +187,6 @@ def stop_game(request, game_id):
 
 
 class Connection(APIView):
-    authentication_classes = [SessionAuthentication]
-
     @swagger_auto_schema(request_body=GameConnectDataSerializer,
                          responses={status.HTTP_200_OK: UserSessionDataSerializer,
                                     status.HTTP_406_NOT_ACCEPTABLE: GameEndpointResponseSerializer,

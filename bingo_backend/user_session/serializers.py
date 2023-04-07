@@ -7,6 +7,7 @@ class UserSessionDataSerializer(serializers.Serializer):
     player_id = serializers.IntegerField(required=True)
     progress = serializers.JSONField()
     random_seed = serializers.IntegerField(required=True)
+    words = serializers.JSONField()
 
 
 class UserSessionsDataSerializer(serializers.ListSerializer):

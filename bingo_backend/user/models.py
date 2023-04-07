@@ -8,7 +8,7 @@ from django.db import models
 
 
 class User(AbstractUser):
-    user_id = models.IntegerField(primary_key=True, auto_created=True)
+    id = models.IntegerField(primary_key=True, auto_created=True)
     nickname = models.CharField(max_length=40, unique=True, null=False)
     # role = models.ManyToManyField(to=Role, related_name='role')
 

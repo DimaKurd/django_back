@@ -14,14 +14,15 @@ from .models import Bingo
 from .permissions import IsBingoOwner
 from .serializers import *
 from .serializers import BingoResponseSerializer
+from rest_framework.permissions import IsAuthenticated
 
 
-class BingoEdit(APIView, LoginRequiredMixin):
+class BingoEdit(APIView):
     """
     implements post, delete and get methods for work with one Bingo set
     """
-    authentication_classes = [authentication.SessionAuthentication]
-    permission_classes = [IsBingoOwner]
+    # authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [IsBingoOwner, IsAuthenticated]
 
     @swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST: BingoResponseSerializer,
                                     status.HTTP_200_OK: BingoResponseSerializer}
@@ -86,11 +87,12 @@ class BingoEdit(APIView, LoginRequiredMixin):
             return Response(data={'Status': f'Error occurred: {e}'})
 
 
-class BingoCommon(LoginRequiredMixin, APIView):
+class BingoCommon(APIView):
     """
     implement creation and all ids of bingo return
     """
-    authentication_classes = [authentication.SessionAuthentication]
+    # authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(request_body=BingoCreateSerializer,
                          responses={status.HTTP_400_BAD_REQUEST: BingoResponseSerializer,
@@ -125,6 +127,6 @@ class BingoCommon(LoginRequiredMixin, APIView):
         :param request:
         :return:
         """
-        data = {bingo.bingo_id: bingo.name for bingo in Bingo.objects.filter(author_id=request.user)}
+        data = {bingo.bingo_id: bingo.name for bingo in Bingo.objects.filter(author_id=request.user.id)}
         return Response(data=data, status=status.HTTP_200_OK)
 
