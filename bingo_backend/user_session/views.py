@@ -64,7 +64,7 @@ class SessionHandler(APIView):
                          responses={status.HTTP_200_OK: UserSessionDataSerializer,
                                     status.HTTP_400_BAD_REQUEST: UserSessionEndpointResponse,
                                     status.HTTP_202_ACCEPTED: UserSessionEndpointResponse})
-    def post(self, request: Request, session_id):
+    def put(self, request: Request, session_id):
         """
         Method for updating progress of UserSession
         :param request:
@@ -106,7 +106,7 @@ def get_user_sessions(request: Request):
                                                      for user_session in user_sessions])
 
 
-@api_view(http_method_names=['POST'])
+@api_view(http_method_names=['PUT'])
 @permission_classes([IsAuthenticated])
 @swagger_auto_schema(responses={status.HTTP_204_NO_CONTENT: UserSessionEndpointResponse,
                                 status.HTTP_400_BAD_REQUEST: UserSessionEndpointResponse})
