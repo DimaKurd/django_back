@@ -64,7 +64,7 @@ class SessionHandler(APIView):
                          responses={status.HTTP_200_OK: UserSessionDataSerializer,
                                     status.HTTP_400_BAD_REQUEST: UserSessionEndpointResponse,
                                     status.HTTP_202_ACCEPTED: UserSessionEndpointResponse})
-    def put(self, request: Request, session_id):
+    def post(self, request: Request, session_id):
         """
         Method for updating progress of UserSession
         :param request:
