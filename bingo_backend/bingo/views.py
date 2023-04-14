@@ -119,14 +119,13 @@ class BingoCommon(APIView):
         return Response(data={'Status': f'new bingo created with name {bingo.name}'}, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(responses={status.HTTP_400_BAD_REQUEST: BingoResponseSerializer,
-                                    status.HTTP_200_OK: BingoResponseSerializer}
-                         )
+                                    status.HTTP_200_OK: BingoObjectsArraySerializer})
     def get(self, request: Request):
         """
         Get all bingo ids of authorized player
         :param request:
         :return:
         """
-        data = {bingo.bingo_id: bingo.name for bingo in Bingo.objects.filter(author_id=request.user.id)}
+        data = [{'bingo_id': bingo.bingo_id, 'author_id': bingo.author_id.id,
+                 'name': bingo.name, 'words': bingo.words} for bingo in Bingo.objects.filter(author_id=request.user.id)]
         return Response(data=data, status=status.HTTP_200_OK)
-
