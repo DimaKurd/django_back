@@ -27,6 +27,17 @@ def get_words_by_game_id(game_id: int):
     return words_bingo
 
 
+def get_words_from_progress(words_progress: str):
+    """
+
+    :param words_progress:
+    :return:
+    """
+    if not words_progress:
+        return []
+    return [word.replace('\'', '') for word in words_progress[1:-1].split('\', ')]
+
+
 class SessionHandler(APIView):
     """
     Class for work with one active user sessions in games
@@ -47,16 +58,18 @@ class SessionHandler(APIView):
                 return Response(status=status.HTTP_200_OK, data={'session_id': user_session.session_id,
                                                                  'game_id': user_session.game.game_id,
                                                                  'player_id': user_session.player.id,
-                                                                 'progress': user_session.progress,
+                                                                 'progress': get_words_from_progress(user_session.progress),
                                                                  'random_seed': user_session.random_seed,
-                                                                 'words': get_words_by_game_id(user_session.game.game_id)})
+                                                                 'words': get_words_by_game_id(
+                                                                     user_session.game.game_id)})
             else:
                 return Response(status=status.HTTP_200_OK, data={'session_id': session_id,
                                                                  'game_id': request.session['game_id'],
                                                                  'player_id': request.session['player_id'],
-                                                                 'progress': request.session['progress'],
+                                                                 'progress': get_words_from_progress(request.session['progress']),
                                                                  'random_seed': request.session['random_seed'],
-                                                                 'words': get_words_by_game_id(request.session['game_id'])})
+                                                                 'words': get_words_by_game_id(
+                                                                     request.session['game_id'])})
 
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'Status': f'Something went wrong: {e}'})
@@ -80,7 +93,7 @@ class SessionHandler(APIView):
                 return Response(status=status.HTTP_200_OK, data={'session_id': user_session.session_id,
                                                                  'game_id': user_session.game.game_id,
                                                                  'player_id': user_session.player.id,
-                                                                 'progress': user_session.progress,
+                                                                 'progress': get_words_from_progress(user_session.progress),
                                                                  'random_seed': user_session.random_seed})
             else:
                 return Response(status=status.HTTP_202_ACCEPTED, data={'Status': "Not saved 'cause you are guest"})
@@ -102,8 +115,9 @@ def get_user_sessions(request: Request):
     return Response(status=status.HTTP_200_OK, data=[{'session_id': user_session.session_id,
                                                       'game_id': user_session.game.game_id,
                                                       'player_id': user_session.player.id,
-                                                      'progress': user_session.progress,
-                                                      'random_seed': user_session.random_seed}
+                                                      'progress': get_words_from_progress(user_session.progress),
+                                                      'random_seed': user_session.random_seed,
+                                                      'words': get_words_by_game_id(user_session.game_id)}
                                                      for user_session in user_sessions])
 
 
