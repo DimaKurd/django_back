@@ -5,9 +5,9 @@ class UserSessionDataSerializer(serializers.Serializer):
     session_id = serializers.IntegerField(required=True)
     game_id = serializers.IntegerField(required=True)
     player_id = serializers.IntegerField(required=True)
-    progress = serializers.JSONField()
+    progress = serializers.ListField()
     random_seed = serializers.IntegerField(required=True)
-    words = serializers.JSONField()
+    words = serializers.ListField()
 
 
 class UserSessionsDataSerializer(serializers.ListSerializer):
@@ -19,4 +19,4 @@ class UserSessionEndpointResponse(serializers.Serializer):
 
 
 class UserSessionUpdateProgressSerializer(serializers.Serializer):
-    progress = serializers.JSONField()
+    progress = serializers.ListField()
