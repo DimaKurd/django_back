@@ -22,8 +22,9 @@ def get_words_by_game_id(game_id: int):
     """
     game_session = GameSession.objects.filter(game_id=game_id)[0]
     bingo = Bingo.objects.filter(bingo_id=game_session.bingo_id.bingo_id)[0]
+    words_bingo = [word.replace('\'', '') for word in bingo.words[1:-1].split('\', ')]
 
-    return bingo.words
+    return words_bingo
 
 
 class SessionHandler(APIView):
